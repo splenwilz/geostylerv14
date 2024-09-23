@@ -1,18 +1,18 @@
 package org.vaadin.example;
 
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.server.VaadinSession;
+
 import org.vaadin.elmot.flow.sensors.GeoLocation;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * A sample Vaadin view class.
- */
 @Route
 @PWA(name = "GeoStyler",
         shortName = "GeoStyler",
@@ -25,76 +25,88 @@ public class MainView extends VerticalLayout {
     private final Span timestampDisplay = new Span();
 
     public MainView() {
-        setUpCustomCss(); // Inject custom CSS
+        addClassName("main-view");
+        injectCustomCss();
 
-        // Header for the application
         H1 header = new H1("GeoStyler");
-        header.getElement().getStyle().set("text-align", "center");
-        header.getElement().getStyle().set("margin-top", "20px");
-        
-        // Display for showing location updates
-        Span locationDisplay = new Span("Waiting for location...");
-        locationDisplay.getElement().getClassList().add("locationstyle");
-        locationDisplay.getElement().getStyle().set("text-align", "center");
-        locationDisplay.getElement().getStyle().set("font-size", "20px");
-        locationDisplay.getElement().getStyle().set("margin-top", "10px");
+        header.addClassName("header");
 
-        // Setup GeoLocation component
+        Span locationDisplay = new Span("Waiting for location...");
+        locationDisplay.addClassName("location-display");
+
+        VerticalLayout locationContainer = new VerticalLayout();
+        locationContainer.addClassName("location-container");
+
+        H3 locationTitle = new H3("Location");
+        locationTitle.addClassName("location-title");
+        locationContainer.add(locationTitle);
+
         GeoLocation geoLocation = new GeoLocation();
         geoLocation.setWatch(true);
         geoLocation.setHighAccuracy(true);
         geoLocation.setTimeout(100000);
         geoLocation.setMaxAge(200000);
-        
-        // Handle successful location retrieval
+
         geoLocation.addValueChangeListener(e -> {
             String position = e.getValue().toString();
             locationDisplay.setText("Location: " + position);
             updateLocationDetails(position);
         });
-        
-        // Handle location errors
-        geoLocation.addErrorListener(e -> {
-            locationDisplay.setText("Location: Error retrieving location");
-        });
 
-        // Add components to layout
-        add(header, locationDisplay, latitudeDisplay, longitudeDisplay, timestampDisplay, geoLocation);
+        geoLocation.addErrorListener(e -> locationDisplay.setText("Location: Error retrieving location"));
 
-        // Optional: Styling
-        setMargin(true);
-        setSpacing(true);
-        getElement().getStyle().set("text-align", "center");
+        VerticalLayout timestampContainer = new VerticalLayout();
+        timestampContainer.addClassName("timestamp-container");
+
+        H3 timestampTitle = new H3("Timestamp");
+        timestampTitle.addClassName("timestamp-title");
+        timestampContainer.add(timestampTitle, timestampDisplay);
+
+        locationContainer.add(latitudeDisplay, longitudeDisplay);
+        add(header, locationDisplay, locationContainer, timestampContainer, geoLocation);
     }
 
-    private void setUpCustomCss() {
-        // Simulate fetching CSS from a backend service
-        String customCss = ".locationstyle { font-size: 16px; color: darkgreen; }"; // Example CSS
+    private void injectCustomCss() {
+        // Simulate fetching CSS from a backend service         
+        String customCss =
+                ".main-view { " +
+                "   text-align: center; width: 500px !important; border-radius: 8px; margin-top: 40px !important; background-color: white; " +
+                "   margin: 0 auto; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); " +
+                "}" +
+                ".header { text-align: center; margin-top: 20px; font-size: 1.6rem; font-weight: bolder; }" +
+                ".location-display { text-align: center; font-size: 16px; margin-top: 10px; color: #a6aab3; }" +
+                ".location-container { background-color: #eff6ff; padding: 20px; border-radius: 8px; text-align: center; }" +
+                ".location-title { padding-top: 5px; margin: 0; font-size: 1.2rem; }" +
+                ".timestamp-container { background-color: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center; }" +
+                ".timestamp-title { margin: 0; padding-top: 5px; font-size: 1.2rem; }" +
+                ".latitude-display { color: green; margin: 1px 0; }" +
+                ".longitude-display { color: blue; margin: 1px 0; }" +
+                ".timestamp-display { color: orange; }" +
+                "html, body { height: 100%; margin: 0; background: linear-gradient(45deg, #dbecfc, #dcfaea); }";
+        // Store the custom CSS in VaadinSession for access in other views
+        VaadinSession.getCurrent().setAttribute("customCss", customCss);
 
-        // Inject the fetched CSS into the document
         String style = "<style>" + customCss + "</style>";
         getElement().executeJs("this.insertAdjacentHTML('beforeend', $0)", style);
     }
 
     private void updateLocationDetails(String position) {
-        // Regex to extract latitude, longitude, and timestamp
         Pattern pattern = Pattern.compile("Position\\{\\[(.+?); (.+?)\\].*timestamp:(.+?)\\}");
         Matcher matcher = pattern.matcher(position);
-        
+
         if (matcher.find()) {
             String latitude = matcher.group(1).trim();
             String longitude = matcher.group(2).trim();
             String timestamp = matcher.group(3).trim();
 
-            // Update displays with different colors
             latitudeDisplay.setText("Latitude: " + latitude);
-            latitudeDisplay.getElement().getStyle().set("color", "green");
+            latitudeDisplay.addClassName("latitude-display");
 
             longitudeDisplay.setText("Longitude: " + longitude);
-            longitudeDisplay.getElement().getStyle().set("color", "blue");
+            longitudeDisplay.addClassName("longitude-display");
 
             timestampDisplay.setText("Timestamp: " + timestamp);
-            timestampDisplay.getElement().getStyle().set("color", "orange");
+            timestampDisplay.addClassName("timestamp-display");
         }
     }
 }
