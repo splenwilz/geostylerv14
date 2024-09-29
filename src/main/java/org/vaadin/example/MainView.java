@@ -4,21 +4,26 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+// import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.server.VaadinSession;
-
 import org.vaadin.elmot.flow.sensors.GeoLocation;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Route
+@Route("")
 @PWA(name = "GeoStyler",
         shortName = "GeoStyler",
         description = "A geolocation display application.",
+        offlineResources = { "./images/offline-image.png" },
+        iconPath = "icons/icon.png",
         enableInstallPrompt = false)
-public class MainView extends VerticalLayout {
+public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private final Span latitudeDisplay = new Span();
     private final Span longitudeDisplay = new Span();
@@ -66,13 +71,32 @@ public class MainView extends VerticalLayout {
         add(header, locationDisplay, locationContainer, timestampContainer, geoLocation);
     }
 
+    // @Override
+    // public void beforeEnter(BeforeEnterEvent event) {
+    //     // Check if "username" query parameter exists and forward to the UserView
+    //     String username = event.getLocation().getQueryParameters().getParameters().getOrDefault("username", List.of("")).get(0);
+    //     if (!username.isEmpty()) {
+    //         // Forward to UserView if username is present
+    //         event.forwardTo(UserView.class, new RouteParameters("username", username));
+    //     }
+    // }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        // Check if "username" query parameter exists
+        String username = event.getLocation().getQueryParameters().getParameters().getOrDefault("username", List.of("")).get(0);
+        if (!username.isEmpty()) {
+            // Perform a full redirect with JavaScript to update the browser URL
+            getElement().executeJs("window.location.href = '/user/' + $0", username);
+        }
+    }
+
+
     private void injectCustomCss() {
         // Simulate fetching CSS from a backend service         
         String customCss =
-                ".main-view { " +
-                "   text-align: center; width: 500px !important; border-radius: 8px; margin-top: 40px !important; background-color: white; " +
-                "   margin: 0 auto; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); " +
-                "}" +
+                ".main-view { text-align: center; width: 500px !important; border-radius: 8px; margin-top: 40px !important; background-color: white; " +
+                "margin: 0 auto; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }" +
                 ".header { text-align: center; margin-top: 20px; font-size: 1.6rem; font-weight: bolder; }" +
                 ".location-display { text-align: center; font-size: 16px; margin-top: 10px; color: #a6aab3; }" +
                 ".location-container { background-color: #eff6ff; padding: 20px; border-radius: 8px; text-align: center; }" +
