@@ -12,6 +12,7 @@ import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.server.VaadinSession;
 import org.vaadin.elmot.flow.sensors.GeoLocation;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -84,7 +85,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         // Check if "username" query parameter exists
-        String username = event.getLocation().getQueryParameters().getParameters().getOrDefault("username", List.of("")).get(0);
+        String username = event.getLocation().getQueryParameters().getParameters().getOrDefault("username", Arrays.asList("")).get(0);
         if (!username.isEmpty()) {
             // Perform a full redirect with JavaScript to update the browser URL
             getElement().executeJs("window.location.href = '/user/' + $0", username);
